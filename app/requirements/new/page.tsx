@@ -23,8 +23,7 @@ export default function NewRequirementPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      setError("Sign in first to post.");
-      setSubmitting(false);
+      router.push("/sign-in");
       return;
     }
 

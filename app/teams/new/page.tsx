@@ -24,8 +24,7 @@ export default function NewTeamPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Sign in first to start a team.");
-      setSubmitting(false);
+      router.push("/sign-in");
       return;
     }
 
