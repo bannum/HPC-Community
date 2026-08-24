@@ -1,0 +1,113 @@
+import Link from "next/link";
+import { supabase } from "@/lib/supabase/client";
+import RsvpButtons from "@/components/RsvpButtons";
+import JoinButton from "@/components/JoinButton";
+
+export const revalidate = 0;
+
+export default async function TeamPage({ params }: { params: { id: string } }) {
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id, name, city, area, description")
+    .eq("id", params.id)
+    .single();
+
+  if (!team) {
+    return <p>Team not found.</p>;
+  }
+
+  const { data: events } = await supabase
+    .from("events")
+    .select("id, title, event_type, starts_at, location, capacity")
+    .eq("team_id", params.id)
+    .order("starts_at", { ascending: true });
+
+  const { count: memberCount } = await supabase
+    .from("memberships")
+    .select("id", { count: "exact", head: true })
+    .eq("team_id", params.id)
+    .eq("status", "accepted");
+
+  // Pull RSVP counts per event in one query, then group client-side (kept simple for MVP).
+  const eventIds = (events ?? []).map((e) => e.id);
+  const { data: rsvps } = eventIds.length
+    ? await supabase
+        .from("rsvps")
+        .select("event_id, status")
+        .in("event_id", eventIds)
+    : { data: [] as { event_id: string; status: string }[] };
+
+  function countsFor(eventId: string) {
+    const rows = (rsvps ?? []).filter((r) => r.event_id === eventId);
+    return {
+      going: rows.filter((r) => r.status === "going").length,
+      maybe: rows.filter((r) => r.status === "maybe").length,
+      not_going: rows.filter((r) => r.status === "not_going").length,
+    };
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-display text-3xl">{team.name}</h1>
+          <p className="text-ink/60">
+            {team.area ? `${team.area}, ` : ""}
+            {team.city} · {memberCount ?? 0} members
+          </p>
+          {team.description && <p className="mt-2">{team.description}</p>}
+        </div>
+        <JoinButton teamId={team.id} />
+      </div>
+
+      <div className="flex justify-between items-center">
+        <h2 className="font-display text-2xl">Events</h2>
+        <Link
+          href={`/teams/${team.id}/events/new`}
+          className="text-sm bg-scoreboard text-ink font-semibold px-4 py-2 rounded"
+        >
+          New event
+        </Link>
+      </div>
+
+      {events && events.length > 0 ? (
+        <ul className="space-y-3">
+          {events.map((e) => {
+            const c = countsFor(e.id);
+            return (
+              <li key={e.id} className="bg-white border border-pitch/20 rounded p-4">
+                <div className="flex justify-between items-start flex-wrap gap-3">
+                  <div>
+                    <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
+                      {e.event_type.replace("_", " ")}
+                    </span>
+                    <p className="font-semibold">{e.title}</p>
+                    <p className="text-sm text-ink/60">
+                      {new Date(e.starts_at).toLocaleString()} · {e.location}
+                      {e.capacity ? ` · capacity ${e.capacity}` : ""}
+                    </p>
+                  </div>
+                  {/* Scoreboard-style RSVP tally — the screen meant to replace scrolling a WhatsApp thread */}
+                  <div className="flex gap-4 scoreboard-digit text-xl">
+                    <span title="Going">{c.going}✓</span>
+                    <span title="Maybe" className="text-scoreboard">
+                      {c.maybe}?
+                    </span>
+                    <span title="Not going" className="text-ink/40">
+                      {c.not_going}✕
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <RsvpButtons eventId={e.id} initialStatus={null} />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="text-ink/60">No events yet.</p>
+      )}
+    </div>
+  );
+}

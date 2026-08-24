@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+body {
+  background-color: #EDE6D6;
+  color: #161A17;
+}
+
+/* Scoreboard-style RSVP counter, the app's signature element */
+.scoreboard-digit {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+*:focus-visible {
+  outline: 2px solid #D98E2B;
+  outline-offset: 2px;
+}
