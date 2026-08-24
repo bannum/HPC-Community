@@ -1,0 +1,137 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+type Requirement = {
+  id: string;
+  requirement_type: string;
+  city: string;
+  area: string | null;
+  details: string;
+  needed_on: string | null;
+  status: string;
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  player_needed: "Player needed",
+  opponent_needed: "Opponent needed",
+  ground_available: "Ground available",
+};
+
+export default function RequirementsBoard({ requirements }: { requirements: Requirement[] }) {
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("all");
+  const [city, setCity] = useState("all");
+  const [showFulfilled, setShowFulfilled] = useState(false);
+  const [sort, setSort] = useState<"newest" | "needed_soonest">("newest");
+
+  const cities = useMemo(
+    () => Array.from(new Set(requirements.map((r) => r.city))).sort(),
+    [requirements]
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let rows = requirements.filter((r) => {
+      if (!showFulfilled && r.status === "fulfilled") return false;
+      if (type !== "all" && r.requirement_type !== type) return false;
+      if (city !== "all" && r.city !== city) return false;
+      if (q) {
+        const haystack = `${r.details} ${r.city} ${r.area ?? ""}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    if (sort === "needed_soonest") {
+      rows = [...rows].sort((a, b) => {
+        if (!a.needed_on && !b.needed_on) return 0;
+        if (!a.needed_on) return 1;
+        if (!b.needed_on) return -1;
+        return a.needed_on.localeCompare(b.needed_on);
+      });
+    }
+    // "newest" relies on the server's created_at DESC order already applied.
+
+    return rows;
+  }, [requirements, search, type, city, showFulfilled, sort]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center bg-white border border-pitch/20 rounded p-4">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search details, city, area…"
+          className="flex-1 min-w-[180px] border border-pitch/30 rounded px-3 py-2"
+        />
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+          className="border border-pitch/30 rounded px-3 py-2"
+        >
+          <option value="all">All types</option>
+          <option value="player_needed">Player needed</option>
+          <option value="opponent_needed">Opponent needed</option>
+          <option value="ground_available">Ground available</option>
+        </select>
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="border border-pitch/30 rounded px-3 py-2"
+        >
+          <option value="all">All cities</option>
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as "newest" | "needed_soonest")}
+          className="border border-pitch/30 rounded px-3 py-2"
+        >
+          <option value="newest">Newest first</option>
+          <option value="needed_soonest">Needed soonest</option>
+        </select>
+        <label className="flex items-center gap-2 text-sm whitespace-nowrap">
+          <input
+            type="checkbox"
+            checked={showFulfilled}
+            onChange={(e) => setShowFulfilled(e.target.checked)}
+          />
+          Show fulfilled
+        </label>
+      </div>
+
+      {filtered.length > 0 ? (
+        <ul className="space-y-3">
+          {filtered.map((r) => (
+            <li
+              key={r.id}
+              className={`bg-white border rounded p-4 ${
+                r.status === "fulfilled" ? "border-ink/10 opacity-60" : "border-pitch/20"
+              }`}
+            >
+              <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
+                {TYPE_LABELS[r.requirement_type] ?? r.requirement_type.replace("_", " ")}
+              </span>
+              {r.status === "fulfilled" && (
+                <span className="text-xs ml-2 text-ink/50">· fulfilled</span>
+              )}
+              <p className="mt-1">{r.details}</p>
+              <p className="text-sm text-ink/60 mt-1">
+                {r.area ? `${r.area}, ` : ""}
+                {r.city}
+                {r.needed_on ? ` · ${r.needed_on}` : ""}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-ink/60">No requirements match your filters.</p>
+      )}
+    </div>
+  );
+}

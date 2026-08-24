@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import RequirementsBoard from "@/components/RequirementsBoard";
 
 export const revalidate = 0;
 
@@ -22,31 +23,7 @@ export default async function RequirementsPage() {
       </div>
 
       {requirements && requirements.length > 0 ? (
-        <ul className="space-y-3">
-          {requirements.map((r) => (
-            <li
-              key={r.id}
-              className={`bg-white border rounded p-4 ${
-                r.status === "fulfilled"
-                  ? "border-ink/10 opacity-60"
-                  : "border-pitch/20"
-              }`}
-            >
-              <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
-                {r.requirement_type.replace("_", " ")}
-              </span>
-              {r.status === "fulfilled" && (
-                <span className="text-xs ml-2 text-ink/50">· fulfilled</span>
-              )}
-              <p className="mt-1">{r.details}</p>
-              <p className="text-sm text-ink/60 mt-1">
-                {r.area ? `${r.area}, ` : ""}
-                {r.city}
-                {r.needed_on ? ` · ${r.needed_on}` : ""}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <RequirementsBoard requirements={requirements} />
       ) : (
         <p className="text-ink/60">Nothing posted yet.</p>
       )}

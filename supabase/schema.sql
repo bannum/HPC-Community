@@ -62,11 +62,43 @@ create table if not exists memberships (
 
 alter table memberships enable row level security;
 
+-- Security-definer helpers: a policy on `memberships` cannot safely query
+-- `memberships` again in its own USING clause (Postgres re-applies the same
+-- policy to that inner query and recurses forever). Routing the check
+-- through a security-definer function breaks the cycle since RLS doesn't
+-- re-enter it.
+create or replace function public.is_accepted_member(_team_id uuid, _user_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from memberships
+    where team_id = _team_id and user_id = _user_id and status = 'accepted'
+  );
+$$;
+
+create or replace function public.has_team_role(_team_id uuid, _user_id uuid, _roles membership_role[])
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from memberships
+    where team_id = _team_id and user_id = _user_id
+      and status = 'accepted' and role = any(_roles)
+  );
+$$;
+
 create policy "Members viewable by team members and the requester"
   on memberships for select using (
     user_id = auth.uid()
     or team_id in (select id from teams where owner_id = auth.uid())
-    or team_id in (select team_id from memberships m where m.user_id = auth.uid() and m.status = 'accepted')
+    or public.is_accepted_member(team_id, auth.uid())
   );
 
 create policy "Users can request to join"
@@ -75,7 +107,7 @@ create policy "Users can request to join"
 create policy "Owners/admins can update membership status"
   on memberships for update using (
     team_id in (select id from teams where owner_id = auth.uid())
-    or team_id in (select team_id from memberships m where m.user_id = auth.uid() and m.role in ('owner','admin') and m.status = 'accepted')
+    or public.has_team_role(team_id, auth.uid(), array['owner','admin']::membership_role[])
   );
 
 -- ============ EVENTS ============
@@ -105,7 +137,7 @@ create policy "Events viewable if team is public or user is a member"
 create policy "Owners/admins can create events"
   on events for insert with check (
     team_id in (select id from teams where owner_id = auth.uid())
-    or team_id in (select team_id from memberships m where m.user_id = auth.uid() and m.role in ('owner','admin') and m.status = 'accepted')
+    or public.has_team_role(team_id, auth.uid(), array['owner','admin']::membership_role[])
   );
 
 -- ============ RSVPs ============
