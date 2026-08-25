@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { isProfileComplete } from "@/lib/supabase/ensureProfile";
+import { ensureAcceptedMembership } from "@/lib/supabase/autoJoin";
 
 type Status = "going" | "maybe" | "not_going";
 
 export default function RsvpButtons({
   eventId,
+  teamId,
   initialStatus,
 }: {
   eventId: string;
+  teamId: string;
   initialStatus: Status | null;
 }) {
   const [status, setStatus] = useState<Status | null>(initialStatus);
@@ -35,6 +38,7 @@ export default function RsvpButtons({
         { event_id: eventId, user_id: user.id, status: newStatus },
         { onConflict: "event_id,user_id" }
       );
+    await ensureAcceptedMembership(teamId, user.id);
     setStatus(newStatus);
     setSaving(false);
   }

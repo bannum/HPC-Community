@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { isProfileComplete } from "@/lib/supabase/ensureProfile";
+import { ensureAcceptedMembership } from "@/lib/supabase/autoJoin";
 import { waLink, telLink } from "@/lib/phone";
 
 type Response = {
@@ -17,11 +18,13 @@ export default function RequirementInteraction({
   postedBy,
   contactPhone,
   status,
+  teamId,
 }: {
   requirementId: string;
   postedBy: string;
   contactPhone: string | null;
   status: string;
+  teamId: string | null;
 }) {
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [responses, setResponses] = useState<Response[] | null>(null);
@@ -77,6 +80,9 @@ export default function RequirementInteraction({
     await supabase
       .from("requirement_responses")
       .insert({ requirement_id: requirementId, user_id: user.id });
+    if (teamId) {
+      await ensureAcceptedMembership(teamId, user.id);
+    }
     fetch("/api/notify/requirement-response", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

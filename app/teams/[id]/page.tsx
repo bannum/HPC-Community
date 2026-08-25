@@ -104,7 +104,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <RsvpButtons eventId={e.id} initialStatus={null} />
+                  <RsvpButtons eventId={e.id} teamId={team.id} initialStatus={null} />
                 </div>
               </li>
             );

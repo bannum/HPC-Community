@@ -19,7 +19,7 @@ export default async function RequirementDetailPage({
   const { data: requirement } = await supabase
     .from("requirements")
     .select(
-      "id, posted_by, requirement_type, custom_type_label, city, area, ground_name, details, needed_on, status, contact_phone, created_at"
+      "id, team_id, posted_by, requirement_type, custom_type_label, city, area, ground_name, details, needed_on, status, contact_phone, created_at"
     )
     .eq("id", params.id)
     .single();
@@ -64,6 +64,7 @@ export default async function RequirementDetailPage({
           postedBy={requirement.posted_by}
           contactPhone={requirement.contact_phone}
           status={requirement.status}
+          teamId={requirement.team_id}
         />
       </div>
     </div>

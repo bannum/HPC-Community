@@ -104,14 +104,28 @@ create policy "Members viewable by team members and the requester"
     or public.is_accepted_member(team_id, auth.uid())
   );
 
+-- Restricted to role='member' and status in ('requested','accepted') so a
+-- user can request to join or self-join (via RSVP/response engagement),
+-- but can never grant themselves owner/admin by crafting the insert.
 create policy "Users can request to join"
-  on memberships for insert with check (auth.uid() = user_id);
+  on memberships for insert with check (
+    auth.uid() = user_id and role = 'member' and status in ('requested', 'accepted')
+  );
 
 create policy "Owners/admins can update membership status"
   on memberships for update using (
     team_id in (select id from teams where owner_id = auth.uid())
     or public.has_team_role(team_id, auth.uid(), array['owner','admin']::membership_role[])
   );
+
+-- Engagement (RSVPing to an event, responding to a requirement) auto-joins
+-- a user to the team -- this lets that self-service update happen without
+-- needing an owner/admin to approve it. Locked to role='member' rows only,
+-- and the update can't change the role, so it can't be used to self-promote.
+create policy "Users can self-accept their own pending membership"
+  on memberships for update
+  using (auth.uid() = user_id and role = 'member')
+  with check (auth.uid() = user_id and role = 'member' and status = 'accepted');
 
 -- Lets anyone compute an accurate "N members" count for public teams
 -- without needing to already be a member (previous policies only let a
