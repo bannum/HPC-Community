@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { isProfileComplete } from "@/lib/supabase/ensureProfile";
 
 type Status = "going" | "maybe" | "not_going";
 
@@ -22,6 +23,10 @@ export default function RsvpButtons({
     } = await supabase.auth.getUser();
     if (!user) {
       window.location.href = "/sign-in";
+      return;
+    }
+    if (!(await isProfileComplete(user.id))) {
+      window.location.href = `/profile?next=${encodeURIComponent(window.location.pathname)}`;
       return;
     }
     await supabase

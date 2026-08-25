@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { isProfileComplete } from "@/lib/supabase/ensureProfile";
 
 type Status = "loading" | "signed_out" | "idle" | "requested" | "accepted" | "error";
 
@@ -41,6 +42,10 @@ export default function JoinButton({ teamId }: { teamId: string }) {
     } = await supabase.auth.getUser();
     if (!user) {
       window.location.href = "/sign-in";
+      return;
+    }
+    if (!(await isProfileComplete(user.id))) {
+      window.location.href = `/profile?next=${encodeURIComponent(window.location.pathname)}`;
       return;
     }
     const { error } = await supabase

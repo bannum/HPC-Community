@@ -1,6 +1,6 @@
 import { supabase } from "./client";
 
-export async function ensureProfile(user: { id: string; email?: string | null }) {
+export async function ensureProfile(user: { id: string }) {
   const { data: existing } = await supabase
     .from("profiles")
     .select("id")
@@ -8,9 +8,15 @@ export async function ensureProfile(user: { id: string; email?: string | null })
     .maybeSingle();
 
   if (!existing) {
-    await supabase.from("profiles").insert({
-      id: user.id,
-      full_name: user.email?.split("@")[0] ?? "New player",
-    });
+    await supabase.from("profiles").insert({ id: user.id });
   }
+}
+
+export async function isProfileComplete(userId: string) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("full_name, phone")
+    .eq("id", userId)
+    .maybeSingle();
+  return Boolean(data?.full_name && data?.phone);
 }

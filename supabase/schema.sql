@@ -5,7 +5,7 @@
 -- ============ PROFILES ============
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  full_name text not null,
+  full_name text, -- nullable until the user completes their profile
   city text,
   phone text,
   created_at timestamptz not null default now()
@@ -13,8 +13,10 @@ create table if not exists profiles (
 
 alter table profiles enable row level security;
 
-create policy "Profiles are viewable by everyone"
-  on profiles for select using (true);
+-- SELECT policies for profiles are defined near the bottom of this file,
+-- once memberships/requirements/requirement_responses exist (phone numbers
+-- are only visible to teammates/team admins/requirement contacts, not
+-- the general public — see "Profiles visible to ..." policies below).
 
 create policy "Users can insert their own profile"
   on profiles for insert with check (auth.uid() = id);
@@ -109,6 +111,14 @@ create policy "Owners/admins can update membership status"
   on memberships for update using (
     team_id in (select id from teams where owner_id = auth.uid())
     or public.has_team_role(team_id, auth.uid(), array['owner','admin']::membership_role[])
+  );
+
+-- Lets anyone compute an accurate "N members" count for public teams
+-- without needing to already be a member (previous policies only let a
+-- member see rows they're part of, so anonymous/public reads saw nothing).
+create policy "Accepted memberships of public teams are viewable by everyone"
+  on memberships for select using (
+    status = 'accepted' and team_id in (select id from teams where is_public = true)
   );
 
 -- ============ EVENTS ============
@@ -233,3 +243,68 @@ create policy "Responses viewable by everyone"
 
 create policy "Users can respond once per requirement"
   on requirement_responses for insert with check (auth.uid() = user_id);
+
+-- ============ PROFILE VISIBILITY ============
+-- Now that phone is effectively mandatory, profiles must NOT be readable
+-- by everyone (that would let anyone dump every user's phone number).
+-- Visible only: to yourself, to teammates, to team owners/admins (including
+-- over pending join requests, so they can be reviewed), and between a
+-- requirement's poster and its responders.
+create or replace function public.shares_team_with(_other_user uuid, _viewer uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from memberships m1
+    join memberships m2 on m1.team_id = m2.team_id
+    where m1.user_id = _viewer and m1.status = 'accepted'
+      and m2.user_id = _other_user and m2.status = 'accepted'
+  );
+$$;
+
+create or replace function public.manages_team_of(_other_user uuid, _viewer uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from memberships m
+    where m.user_id = _other_user
+      and (
+        m.team_id in (select id from teams where owner_id = _viewer)
+        or public.has_team_role(m.team_id, _viewer, array['owner','admin']::membership_role[])
+      )
+  );
+$$;
+
+create or replace function public.requirement_contact_visible(_profile_id uuid, _viewer uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from requirement_responses rr
+    join requirements r on r.id = rr.requirement_id
+    where (rr.user_id = _profile_id and r.posted_by = _viewer)
+       or (r.posted_by = _profile_id and rr.user_id = _viewer)
+  );
+$$;
+
+create policy "Profiles visible to self"
+  on profiles for select using (auth.uid() = id);
+
+create policy "Teammates can view each other's profiles"
+  on profiles for select using (public.shares_team_with(id, auth.uid()));
+
+create policy "Team owners/admins can view member and requester profiles"
+  on profiles for select using (public.manages_team_of(id, auth.uid()));
+
+create policy "Requirement poster and responder can view each other"
+  on profiles for select using (public.requirement_contact_visible(id, auth.uid()));

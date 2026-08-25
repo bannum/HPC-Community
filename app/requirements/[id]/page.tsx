@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import RequirementInteraction from "@/components/RequirementInteraction";
 
 export const revalidate = 0;
 
@@ -10,12 +11,6 @@ const TYPE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-function waLink(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  const withCountryCode = digits.length === 10 ? `91${digits}` : digits;
-  return `https://wa.me/${withCountryCode}`;
-}
-
 export default async function RequirementDetailPage({
   params,
 }: {
@@ -24,7 +19,7 @@ export default async function RequirementDetailPage({
   const { data: requirement } = await supabase
     .from("requirements")
     .select(
-      "id, requirement_type, custom_type_label, city, area, ground_name, details, needed_on, status, contact_phone, created_at"
+      "id, posted_by, requirement_type, custom_type_label, city, area, ground_name, details, needed_on, status, contact_phone, created_at"
     )
     .eq("id", params.id)
     .single();
@@ -64,24 +59,11 @@ export default async function RequirementDetailPage({
             : ""}
         </p>
 
-        {requirement.contact_phone && (
-          <div className="mt-5 flex gap-3">
-            <a
-              href={waLink(requirement.contact_phone)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-scoreboard text-ink font-semibold px-4 py-2 rounded text-sm"
-            >
-              WhatsApp
-            </a>
-            <a
-              href={`tel:${requirement.contact_phone}`}
-              className="border border-pitch text-pitch font-semibold px-4 py-2 rounded text-sm"
-            >
-              Call
-            </a>
-          </div>
-        )}
+        <RequirementInteraction
+          requirementId={requirement.id}
+          postedBy={requirement.posted_by}
+          contactPhone={requirement.contact_phone}
+        />
       </div>
     </div>
   );
