@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import RequireAuth from "@/components/RequireAuth";
 
 export default function NewTeamPage() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function NewTeamPage() {
   }
 
   return (
+    <RequireAuth>
     <div className="max-w-lg">
       <h1 className="font-display text-3xl mb-6">Start a team</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -125,5 +127,6 @@ export default function NewTeamPage() {
         </button>
       </form>
     </div>
+    </RequireAuth>
   );
 }

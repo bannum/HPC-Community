@@ -7,7 +7,9 @@ export const revalidate = 0;
 export default async function RequirementsPage() {
   const { data: requirements } = await supabase
     .from("requirements")
-    .select("id, requirement_type, city, area, details, needed_on, status")
+    .select(
+      "id, requirement_type, custom_type_label, city, area, ground_name, details, needed_on, status"
+    )
     .order("created_at", { ascending: false });
 
   return (

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import RequireAuth from "@/components/RequireAuth";
 
 export default function NewEventPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -48,6 +49,7 @@ export default function NewEventPage({ params }: { params: { id: string } }) {
   }
 
   return (
+    <RequireAuth>
     <div className="max-w-lg">
       <h1 className="font-display text-3xl mb-6">New event</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,5 +116,6 @@ export default function NewEventPage({ params }: { params: { id: string } }) {
         </button>
       </form>
     </div>
+    </RequireAuth>
   );
 }

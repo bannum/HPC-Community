@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import RsvpButtons from "@/components/RsvpButtons";
 import JoinButton from "@/components/JoinButton";
+import NewEventButton from "@/components/NewEventButton";
 
 export const revalidate = 0;
 
@@ -62,12 +62,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
 
       <div className="flex justify-between items-center">
         <h2 className="font-display text-2xl">Events</h2>
-        <Link
-          href={`/teams/${team.id}/events/new`}
-          className="text-sm bg-scoreboard text-ink font-semibold px-4 py-2 rounded"
-        >
-          New event
-        </Link>
+        <NewEventButton teamId={team.id} />
       </div>
 
       {events && events.length > 0 ? (

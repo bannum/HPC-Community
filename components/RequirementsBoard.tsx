@@ -6,8 +6,10 @@ import Link from "next/link";
 type Requirement = {
   id: string;
   requirement_type: string;
+  custom_type_label: string | null;
   city: string;
   area: string | null;
+  ground_name: string | null;
   details: string;
   needed_on: string | null;
   status: string;
@@ -17,7 +19,13 @@ const TYPE_LABELS: Record<string, string> = {
   player_needed: "Player needed",
   opponent_needed: "Opponent needed",
   ground_available: "Ground available",
+  other: "Other",
 };
+
+function typeLabel(r: Pick<Requirement, "requirement_type" | "custom_type_label">) {
+  if (r.requirement_type === "other" && r.custom_type_label) return r.custom_type_label;
+  return TYPE_LABELS[r.requirement_type] ?? r.requirement_type.replace("_", " ");
+}
 
 export default function RequirementsBoard({ requirements }: { requirements: Requirement[] }) {
   const [search, setSearch] = useState("");
@@ -75,6 +83,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
           <option value="player_needed">Player needed</option>
           <option value="opponent_needed">Opponent needed</option>
           <option value="ground_available">Ground available</option>
+          <option value="other">Other</option>
         </select>
         <select
           value={city}
@@ -117,16 +126,17 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
             >
               <Link href={`/requirements/${r.id}`} className="block p-4 hover:border-scoreboard">
                 <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
-                  {TYPE_LABELS[r.requirement_type] ?? r.requirement_type.replace("_", " ")}
+                  {typeLabel(r)}
                 </span>
                 {r.status === "fulfilled" && (
                   <span className="text-xs ml-2 text-ink/50">· fulfilled</span>
                 )}
                 <p className="mt-1">{r.details}</p>
                 <p className="text-sm text-ink/60 mt-1">
+                  {r.ground_name ? `${r.ground_name}, ` : ""}
                   {r.area ? `${r.area}, ` : ""}
                   {r.city}
-                  {r.needed_on ? ` · ${r.needed_on}` : ""}
+                  {r.needed_on ? ` · ${new Date(r.needed_on).toLocaleString()}` : ""}
                 </p>
               </Link>
             </li>

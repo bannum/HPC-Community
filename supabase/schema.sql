@@ -134,10 +134,10 @@ create policy "Events viewable if team is public or user is a member"
     or team_id in (select id from teams where owner_id = auth.uid())
   );
 
-create policy "Owners/admins can create events"
+create policy "Members can create events"
   on events for insert with check (
     team_id in (select id from teams where owner_id = auth.uid())
-    or public.has_team_role(team_id, auth.uid(), array['owner','admin']::membership_role[])
+    or public.is_accepted_member(team_id, auth.uid())
   );
 
 -- ============ RSVPs ============
@@ -163,8 +163,28 @@ create policy "Users manage their own RSVP"
 create policy "Users update their own RSVP"
   on rsvps for update using (auth.uid() = user_id);
 
+-- ============ GROUNDS ============
+-- A lightweight, growing registry of ground names so future requirement
+-- posts can autocomplete from previous entries. No location data yet —
+-- room to add lat/lng later for a maps link.
+create table if not exists grounds (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  city text,
+  area text,
+  created_at timestamptz not null default now()
+);
+
+alter table grounds enable row level security;
+
+create policy "Grounds are viewable by everyone"
+  on grounds for select using (true);
+
+create policy "Authenticated users can add grounds"
+  on grounds for insert with check (auth.uid() is not null);
+
 -- ============ REQUIREMENT POSTS ============
-create type requirement_type as enum ('ground_available', 'opponent_needed', 'player_needed');
+create type requirement_type as enum ('ground_available', 'opponent_needed', 'player_needed', 'other');
 create type requirement_status as enum ('open', 'fulfilled');
 
 create table if not exists requirements (
@@ -172,10 +192,12 @@ create table if not exists requirements (
   team_id uuid references teams(id) on delete cascade, -- nullable: solo organizers without a team
   posted_by uuid not null references profiles(id),
   requirement_type requirement_type not null,
+  custom_type_label text, -- set when requirement_type = 'other'
   city text not null,
   area text,
+  ground_name text,
   details text not null,
-  needed_on date,
+  needed_on timestamptz,
   contact_phone text,
   status requirement_status not null default 'open',
   created_at timestamptz not null default now()
