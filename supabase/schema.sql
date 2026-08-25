@@ -26,6 +26,7 @@ create policy "Users can update their own profile"
 create table if not exists teams (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  kind text not null default 'team' check (kind in ('team', 'group', 'club')),
   sport text not null default 'cricket',
   city text not null,
   area text,

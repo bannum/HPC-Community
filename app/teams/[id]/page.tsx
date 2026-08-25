@@ -8,7 +8,7 @@ export const revalidate = 0;
 export default async function TeamPage({ params }: { params: { id: string } }) {
   const { data: team } = await supabase
     .from("teams")
-    .select("id, name, city, area, description")
+    .select("id, name, kind, city, area, description")
     .eq("id", params.id)
     .single();
 
@@ -50,6 +50,9 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
+          <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
+            {team.kind}
+          </span>
           <h1 className="font-display text-3xl">{team.name}</h1>
           <p className="text-ink/60">
             {team.area ? `${team.area}, ` : ""}

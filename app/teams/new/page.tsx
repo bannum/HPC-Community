@@ -8,6 +8,7 @@ import RequireAuth from "@/components/RequireAuth";
 export default function NewTeamPage() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [kind, setKind] = useState("team");
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
   const [description, setDescription] = useState("");
@@ -33,6 +34,7 @@ export default function NewTeamPage() {
       .from("teams")
       .insert({
         name,
+        kind,
         city,
         area: area || null,
         description: description || null,
@@ -62,10 +64,10 @@ export default function NewTeamPage() {
   return (
     <RequireAuth>
     <div className="max-w-lg">
-      <h1 className="font-display text-3xl mb-6">Start a team</h1>
+      <h1 className="font-display text-3xl mb-6">Start a team, group, or club</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Team name</label>
+          <label className="block text-sm font-medium mb-1">Name</label>
           <input
             required
             value={name}
@@ -73,6 +75,18 @@ export default function NewTeamPage() {
             className="w-full border border-pitch/30 rounded px-3 py-2"
             placeholder="e.g. Sunday Warriors"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Type</label>
+          <select
+            value={kind}
+            onChange={(e) => setKind(e.target.value)}
+            className="w-full border border-pitch/30 rounded px-3 py-2"
+          >
+            <option value="team">Team</option>
+            <option value="group">Group</option>
+            <option value="club">Club</option>
+          </select>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>

@@ -6,7 +6,7 @@ export const revalidate = 0;
 export default async function HomePage() {
   const { data: teams } = await supabase
     .from("teams")
-    .select("id, name, city, area, description")
+    .select("id, name, kind, city, area, description")
     .eq("is_public", true)
     .order("created_at", { ascending: false })
     .limit(12);
@@ -80,6 +80,9 @@ export default async function HomePage() {
                   href={`/teams/${t.id}`}
                   className="block bg-white rounded border border-pitch/20 p-4 hover:border-scoreboard transition-colors"
                 >
+                  <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
+                    {t.kind}
+                  </span>
                   <p className="font-semibold">{t.name}</p>
                   <p className="text-sm text-ink/60">
                     {t.area ? `${t.area}, ` : ""}
