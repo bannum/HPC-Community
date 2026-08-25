@@ -4,6 +4,7 @@ import JoinButton from "@/components/JoinButton";
 import NewEventButton from "@/components/NewEventButton";
 import PendingRequests from "@/components/PendingRequests";
 import MembersList from "@/components/MembersList";
+import ContactOrganizers from "@/components/ContactOrganizers";
 
 export const revalidate = 0;
 
@@ -67,6 +68,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
 
       <PendingRequests teamId={team.id} />
       <MembersList teamId={team.id} />
+      <ContactOrganizers teamId={team.id} />
 
       <div className="flex justify-between items-center">
         <h2 className="font-display text-2xl">Events</h2>
