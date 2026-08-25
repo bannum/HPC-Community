@@ -63,6 +63,7 @@ export default async function RequirementDetailPage({
           requirementId={requirement.id}
           postedBy={requirement.posted_by}
           contactPhone={requirement.contact_phone}
+          status={requirement.status}
         />
       </div>
     </div>

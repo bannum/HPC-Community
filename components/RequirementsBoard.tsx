@@ -46,7 +46,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
       if (type !== "all" && r.requirement_type !== type) return false;
       if (city !== "all" && r.city !== city) return false;
       if (q) {
-        const haystack = `${r.details} ${r.city} ${r.area ?? ""}`.toLowerCase();
+        const haystack = `${r.details} ${r.city} ${r.area ?? ""} ${r.ground_name ?? ""}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;
@@ -71,7 +71,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search details, city, area…"
+          placeholder="Search details, city, area, ground…"
           className="flex-1 min-w-[180px] border border-pitch/30 rounded px-3 py-2"
         />
         <select
