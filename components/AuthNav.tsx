@@ -28,6 +28,9 @@ export default function AuthNav() {
     return (
       <div className="flex items-center gap-3 min-w-0">
         <span className="text-stumps/80 truncate max-w-[9rem] sm:max-w-none">{email}</span>
+        <Link href="/profile" className="underline shrink-0">
+          Profile
+        </Link>
         <button onClick={handleSignOut} className="underline shrink-0">
           Sign out
         </button>
