@@ -40,6 +40,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/teams">Teams</Link>
               <Link href="/requirements">Board</Link>
               <Link href="/teams/new">Start a team</Link>
+              <a href="https://petee.in" target="_blank" rel="noopener noreferrer">
+                Custom Sports Wear
+              </a>
+              <a href="https://hpc.petee.in" target="_blank" rel="noopener noreferrer">
+                HPC Cricket
+              </a>
               <AuthNav />
             </nav>
           </div>
