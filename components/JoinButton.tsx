@@ -52,6 +52,13 @@ export default function JoinButton({ teamId }: { teamId: string }) {
       .from("memberships")
       .insert({ team_id: teamId, user_id: user.id, status: "requested" });
     setState(error ? "error" : "requested");
+    if (!error) {
+      fetch("/api/notify/join-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId, requesterId: user.id }),
+      }).catch(() => {});
+    }
   }
 
   if (state === "loading") return null;

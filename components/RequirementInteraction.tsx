@@ -77,6 +77,11 @@ export default function RequirementInteraction({
     await supabase
       .from("requirement_responses")
       .insert({ requirement_id: requirementId, user_id: user.id });
+    fetch("/api/notify/requirement-response", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requirementId, responderId: user.id }),
+    }).catch(() => {});
     setAlreadyResponded(true);
     setResponding(false);
   }

@@ -29,21 +29,31 @@ export default function NewEventPage({ params }: { params: { id: string } }) {
       return;
     }
 
-    const { error: insertError } = await supabase.from("events").insert({
-      team_id: params.id,
-      title,
-      event_type: eventType,
-      starts_at: new Date(startsAt).toISOString(),
-      location,
-      capacity: capacity ? parseInt(capacity, 10) : null,
-      created_by: user.id,
-    });
+    const { data, error: insertError } = await supabase
+      .from("events")
+      .insert({
+        team_id: params.id,
+        title,
+        event_type: eventType,
+        starts_at: new Date(startsAt).toISOString(),
+        location,
+        capacity: capacity ? parseInt(capacity, 10) : null,
+        created_by: user.id,
+      })
+      .select("id")
+      .single();
 
     if (insertError) {
       setError(insertError.message);
       setSubmitting(false);
       return;
     }
+
+    fetch("/api/notify/new-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamId: params.id, eventId: data.id }),
+    }).catch(() => {});
 
     router.push(`/teams/${params.id}`);
   }

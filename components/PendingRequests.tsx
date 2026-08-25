@@ -48,9 +48,14 @@ export default function PendingRequests({ teamId }: { teamId: string }) {
     };
   }, [teamId]);
 
-  async function respond(id: string, status: "accepted" | "rejected") {
+  async function respond(id: string, userId: string, status: "accepted" | "rejected") {
     await supabase.from("memberships").update({ status }).eq("id", id);
     setRequests((prev) => (prev ?? []).filter((r) => r.id !== id));
+    fetch("/api/notify/membership-decision", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamId, requesterId: userId, decision: status }),
+    }).catch(() => {});
   }
 
   if (!canManage || !requests || requests.length === 0) return null;
@@ -64,13 +69,13 @@ export default function PendingRequests({ teamId }: { teamId: string }) {
             <span>{r.profiles?.full_name ?? "Unknown"}</span>
             <div className="flex gap-2">
               <button
-                onClick={() => respond(r.id, "accepted")}
+                onClick={() => respond(r.id, r.user_id, "accepted")}
                 className="text-sm bg-scoreboard text-ink font-semibold px-3 py-1 rounded"
               >
                 Accept
               </button>
               <button
-                onClick={() => respond(r.id, "rejected")}
+                onClick={() => respond(r.id, r.user_id, "rejected")}
                 className="text-sm border border-pitch/30 px-3 py-1 rounded"
               >
                 Reject
