@@ -94,18 +94,18 @@ export default function SignInPage() {
         </form>
       ) : (
         <form onSubmit={handleVerifyCode} className="space-y-4">
-          <p className="text-sm text-ink/70">We sent a 6-digit code to {email}.</p>
+          <p className="text-sm text-ink/70">We sent a sign-in code to {email}.</p>
           <div>
             <label className="block text-sm font-medium mb-1">Code</label>
             <input
               required
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={10}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               className="w-full border border-pitch/30 rounded px-3 py-2 tracking-widest text-lg"
-              placeholder="123456"
+              placeholder="12345678"
               autoFocus
             />
           </div>
