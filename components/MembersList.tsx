@@ -6,6 +6,7 @@ import { waLink, telLink } from "@/lib/phone";
 
 type Member = {
   id: string;
+  user_id: string;
   role: string;
   profiles: { full_name: string | null; phone: string | null } | null;
 };
@@ -13,6 +14,7 @@ type Member = {
 export default function MembersList({ teamId }: { teamId: string }) {
   const [canManage, setCanManage] = useState(false);
   const [members, setMembers] = useState<Member[] | null>(null);
+  const [viewerId, setViewerId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,6 +23,7 @@ export default function MembersList({ teamId }: { teamId: string }) {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
+      setViewerId(user.id);
 
       const { data: membership } = await supabase
         .from("memberships")
@@ -36,7 +39,7 @@ export default function MembersList({ teamId }: { teamId: string }) {
 
       const { data } = await supabase
         .from("memberships")
-        .select("id, role, profiles(full_name, phone)")
+        .select("id, user_id, role, profiles(full_name, phone)")
         .eq("team_id", teamId)
         .eq("status", "accepted")
         .order("role");
@@ -58,12 +61,15 @@ export default function MembersList({ teamId }: { teamId: string }) {
         {members.map((m) => (
           <li key={m.id} className="flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <span>{m.profiles?.full_name ?? "Unknown"}</span>
+              <span>
+                {m.profiles?.full_name ?? "Unknown"}
+                {m.user_id === viewerId && " (you)"}
+              </span>
               <span className="text-xs uppercase tracking-wide text-ink/50 ml-2">
                 {m.role}
               </span>
             </div>
-            {m.profiles?.phone && (
+            {m.profiles?.phone && m.user_id !== viewerId && (
               <div className="flex gap-2">
                 <a
                   href={waLink(m.profiles.phone)}
