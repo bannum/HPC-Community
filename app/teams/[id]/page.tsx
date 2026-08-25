@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase/client";
 import RsvpButtons from "@/components/RsvpButtons";
 import JoinButton from "@/components/JoinButton";
 import NewEventButton from "@/components/NewEventButton";
+import PendingRequests from "@/components/PendingRequests";
 
 export const revalidate = 0;
 
@@ -62,6 +63,8 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
         </div>
         <JoinButton teamId={team.id} />
       </div>
+
+      <PendingRequests teamId={team.id} />
 
       <div className="flex justify-between items-center">
         <h2 className="font-display text-2xl">Events</h2>

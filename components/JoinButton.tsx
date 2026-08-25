@@ -1,10 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
+type Status = "loading" | "signed_out" | "idle" | "requested" | "accepted" | "error";
+
 export default function JoinButton({ teamId }: { teamId: string }) {
-  const [state, setState] = useState<"idle" | "requested" | "error">("idle");
+  const [state, setState] = useState<Status>("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        if (!cancelled) setState("signed_out");
+        return;
+      }
+      const { data } = await supabase
+        .from("memberships")
+        .select("status")
+        .eq("team_id", teamId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.status === "accepted") setState("accepted");
+      else if (data?.status === "requested") setState("requested");
+      else setState("idle");
+    }
+    check();
+    return () => {
+      cancelled = true;
+    };
+  }, [teamId]);
 
   async function handleJoin() {
     const {
@@ -20,8 +49,14 @@ export default function JoinButton({ teamId }: { teamId: string }) {
     setState(error ? "error" : "requested");
   }
 
+  if (state === "loading") return null;
+
+  if (state === "accepted") {
+    return <p className="text-sm text-pitch font-medium">You're a member</p>;
+  }
+
   if (state === "requested") {
-    return <p className="text-sm text-pitch font-medium">Request sent</p>;
+    return <p className="text-sm text-pitch font-medium">Request sent — pending approval</p>;
   }
 
   return (
