@@ -176,6 +176,7 @@ create table if not exists requirements (
   area text,
   details text not null,
   needed_on date,
+  contact_phone text,
   status requirement_status not null default 'open',
   created_at timestamptz not null default now()
 );

@@ -11,6 +11,7 @@ export default function NewRequirementPage() {
   const [area, setArea] = useState("");
   const [details, setDetails] = useState("");
   const [neededOn, setNeededOn] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -34,6 +35,7 @@ export default function NewRequirementPage() {
       area: area || null,
       details,
       needed_on: neededOn || null,
+      contact_phone: contactPhone || null,
     });
 
     if (insertError) {
@@ -103,6 +105,21 @@ export default function NewRequirementPage() {
             onChange={(e) => setNeededOn(e.target.value)}
             className="w-full border border-pitch/30 rounded px-3 py-2"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Contact phone (optional)
+          </label>
+          <input
+            type="tel"
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
+            className="w-full border border-pitch/30 rounded px-3 py-2"
+            placeholder="9876543210"
+          />
+          <p className="text-xs text-ink/50 mt-1">
+            Shown as a WhatsApp/call link so people can reach you directly.
+          </p>
         </div>
         {error && <p className="text-red-700 text-sm">{error}</p>}
         <button

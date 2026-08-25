@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 type Requirement = {
   id: string;
@@ -110,22 +111,24 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
           {filtered.map((r) => (
             <li
               key={r.id}
-              className={`bg-white border rounded p-4 ${
+              className={`bg-white border rounded ${
                 r.status === "fulfilled" ? "border-ink/10 opacity-60" : "border-pitch/20"
               }`}
             >
-              <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
-                {TYPE_LABELS[r.requirement_type] ?? r.requirement_type.replace("_", " ")}
-              </span>
-              {r.status === "fulfilled" && (
-                <span className="text-xs ml-2 text-ink/50">· fulfilled</span>
-              )}
-              <p className="mt-1">{r.details}</p>
-              <p className="text-sm text-ink/60 mt-1">
-                {r.area ? `${r.area}, ` : ""}
-                {r.city}
-                {r.needed_on ? ` · ${r.needed_on}` : ""}
-              </p>
+              <Link href={`/requirements/${r.id}`} className="block p-4 hover:border-scoreboard">
+                <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
+                  {TYPE_LABELS[r.requirement_type] ?? r.requirement_type.replace("_", " ")}
+                </span>
+                {r.status === "fulfilled" && (
+                  <span className="text-xs ml-2 text-ink/50">· fulfilled</span>
+                )}
+                <p className="mt-1">{r.details}</p>
+                <p className="text-sm text-ink/60 mt-1">
+                  {r.area ? `${r.area}, ` : ""}
+                  {r.city}
+                  {r.needed_on ? ` · ${r.needed_on}` : ""}
+                </p>
+              </Link>
             </li>
           ))}
         </ul>
