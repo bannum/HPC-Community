@@ -21,7 +21,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-body min-h-screen">
         <header className="bg-pitch text-stumps border-b-4 border-scoreboard">
           <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-            <Link href="/" className="font-display text-2xl tracking-wide">
+            <Link href="/" className="flex items-center gap-2 font-display text-2xl tracking-wide">
+              <svg width="28" height="28" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="50" cy="50" r="48" fill="#4A6B57" />
+                <circle cx="50" cy="50" r="36" fill="#D98E2B" />
+                <path
+                  d="M50 16 C 36 36, 36 64, 50 84"
+                  fill="none"
+                  stroke="#EDE6D6"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray="1 8"
+                />
+              </svg>
               CRICKET CONNECT
             </Link>
             <nav className="flex gap-5 text-sm font-medium">
