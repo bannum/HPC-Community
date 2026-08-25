@@ -19,6 +19,15 @@ export default function SignInPage() {
     else setSent(true);
   }
 
+  async function handleGoogleSignIn() {
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setError(error.message);
+  }
+
   if (sent) {
     return (
       <div className="max-w-sm">
@@ -31,6 +40,21 @@ export default function SignInPage() {
   return (
     <div className="max-w-sm">
       <h1 className="font-display text-3xl mb-6">Sign in</h1>
+
+      <button
+        onClick={handleGoogleSignIn}
+        type="button"
+        className="w-full border border-pitch/30 rounded px-3 py-2 font-medium mb-4"
+      >
+        Continue with Google
+      </button>
+
+      <div className="flex items-center gap-3 text-xs text-ink/50 mb-4">
+        <div className="flex-1 border-t border-pitch/20" />
+        or
+        <div className="flex-1 border-t border-pitch/20" />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Email</label>
