@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase/client";
 
 type Requirement = {
   id: string;
+  posted_by: string;
   requirement_type: string;
   custom_type_label: string | null;
   city: string;
@@ -32,7 +34,13 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
   const [type, setType] = useState("all");
   const [city, setCity] = useState("all");
   const [showFulfilled, setShowFulfilled] = useState(false);
+  const [mineOnly, setMineOnly] = useState(false);
   const [sort, setSort] = useState<"newest" | "needed_soonest">("newest");
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []);
 
   const cities = useMemo(
     () => Array.from(new Set(requirements.map((r) => r.city))).sort(),
@@ -42,6 +50,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let rows = requirements.filter((r) => {
+      if (mineOnly && r.posted_by !== userId) return false;
       if (!showFulfilled && r.status === "fulfilled") return false;
       if (type !== "all" && r.requirement_type !== type) return false;
       if (city !== "all" && r.city !== city) return false;
@@ -63,7 +72,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
     // "newest" relies on the server's created_at DESC order already applied.
 
     return rows;
-  }, [requirements, search, type, city, showFulfilled, sort]);
+  }, [requirements, search, type, city, showFulfilled, mineOnly, userId, sort]);
 
   return (
     <div className="space-y-4">
@@ -113,6 +122,16 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
           />
           Show fulfilled
         </label>
+        {userId && (
+          <label className="flex items-center gap-2 text-sm whitespace-nowrap">
+            <input
+              type="checkbox"
+              checked={mineOnly}
+              onChange={(e) => setMineOnly(e.target.checked)}
+            />
+            Posted by me
+          </label>
+        )}
       </div>
 
       {filtered.length > 0 ? (

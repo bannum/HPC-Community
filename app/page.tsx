@@ -18,6 +18,13 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(6);
 
+  const { data: upcomingEvents } = await supabase
+    .from("events")
+    .select("id, title, event_type, starts_at, location, team_id, teams(name)")
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(6);
+
   return (
     <div className="space-y-12">
       <section className="bg-pitch text-stumps rounded-lg p-8">
@@ -75,6 +82,34 @@ export default async function HomePage() {
               Post a requirement
             </Link>
           </p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="font-display text-2xl mb-4">Upcoming events</h2>
+        {upcomingEvents && upcomingEvents.length > 0 ? (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {upcomingEvents.map((e) => (
+              <li key={e.id}>
+                <Link
+                  href={`/teams/${e.team_id}`}
+                  className="block bg-white rounded border border-pitch/20 p-4 hover:border-scoreboard transition-colors"
+                >
+                  <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
+                    {e.event_type.replace("_", " ")}
+                  </span>
+                  <p className="font-semibold mt-1">{e.title}</p>
+                  <p className="text-sm text-ink/60 mt-1">
+                    {(e.teams as unknown as { name: string } | null)?.name}
+                    {" · "}
+                    {new Date(e.starts_at).toLocaleString()} · {e.location}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-ink/60">No upcoming events yet.</p>
         )}
       </section>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { isProfileComplete } from "@/lib/supabase/ensureProfile";
 import { ensureAcceptedMembership } from "@/lib/supabase/autoJoin";
@@ -108,17 +109,25 @@ export default function RequirementInteraction({
   if (isPoster) {
     return (
       <div className="mt-5 space-y-5">
-        <button
-          onClick={toggleStatus}
-          disabled={updatingStatus}
-          className="border border-pitch text-pitch font-semibold px-4 py-2 rounded text-sm disabled:opacity-50"
-        >
-          {updatingStatus
-            ? "Updating…"
-            : status === "fulfilled"
-              ? "Reopen"
-              : "Mark as fulfilled"}
-        </button>
+        <div className="flex gap-3">
+          <Link
+            href={`/requirements/${requirementId}/edit`}
+            className="border border-pitch/30 text-ink font-semibold px-4 py-2 rounded text-sm"
+          >
+            Edit
+          </Link>
+          <button
+            onClick={toggleStatus}
+            disabled={updatingStatus}
+            className="border border-pitch text-pitch font-semibold px-4 py-2 rounded text-sm disabled:opacity-50"
+          >
+            {updatingStatus
+              ? "Updating…"
+              : status === "fulfilled"
+                ? "Reopen"
+                : "Mark as fulfilled"}
+          </button>
+        </div>
 
         {!responses || responses.length === 0 ? (
           <p className="text-sm text-ink/60">No responses yet.</p>
