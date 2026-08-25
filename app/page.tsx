@@ -13,7 +13,7 @@ export default async function HomePage() {
 
   const { data: openRequirements } = await supabase
     .from("requirements")
-    .select("id, requirement_type, city, area, details, needed_on")
+    .select("id, requirement_type, custom_type_label, city, area, ground_name, details, needed_on")
     .eq("status", "open")
     .order("created_at", { ascending: false })
     .limit(6);
@@ -47,16 +47,24 @@ export default async function HomePage() {
         {openRequirements && openRequirements.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {openRequirements.map((r) => (
-              <li key={r.id} className="bg-white rounded border border-pitch/20 p-4">
-                <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
-                  {r.requirement_type.replace("_", " ")}
-                </span>
-                <p className="mt-1">{r.details}</p>
-                <p className="text-sm text-ink/60 mt-1">
-                  {r.area ? `${r.area}, ` : ""}
-                  {r.city}
-                  {r.needed_on ? ` · ${r.needed_on}` : ""}
-                </p>
+              <li key={r.id}>
+                <Link
+                  href={`/requirements/${r.id}`}
+                  className="block bg-white rounded border border-pitch/20 p-4 hover:border-scoreboard transition-colors"
+                >
+                  <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
+                    {r.requirement_type === "other" && r.custom_type_label
+                      ? r.custom_type_label
+                      : r.requirement_type.replace("_", " ")}
+                  </span>
+                  <p className="mt-1">{r.details}</p>
+                  <p className="text-sm text-ink/60 mt-1">
+                    {r.ground_name ? `${r.ground_name}, ` : ""}
+                    {r.area ? `${r.area}, ` : ""}
+                    {r.city}
+                    {r.needed_on ? ` · ${new Date(r.needed_on).toLocaleString()}` : ""}
+                  </p>
+                </Link>
               </li>
             ))}
           </ul>
