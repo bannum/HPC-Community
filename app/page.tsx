@@ -92,7 +92,7 @@ export default async function HomePage() {
             {upcomingEvents.map((e) => (
               <li key={e.id}>
                 <Link
-                  href={`/teams/${e.team_id}`}
+                  href={`/teams/${e.team_id}/events/${e.id}`}
                   className="block bg-white rounded border border-pitch/20 p-4 hover:border-scoreboard transition-colors"
                 >
                   <span className="text-xs uppercase tracking-wide text-pitch font-semibold">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import RsvpButtons from "@/components/RsvpButtons";
 import JoinButton from "@/components/JoinButton";
@@ -86,7 +87,12 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                     <span className="text-xs uppercase tracking-wide text-pitch font-semibold">
                       {e.event_type.replace("_", " ")}
                     </span>
-                    <p className="font-semibold">{e.title}</p>
+                    <Link
+                      href={`/teams/${team.id}/events/${e.id}`}
+                      className="font-semibold hover:underline"
+                    >
+                      {e.title}
+                    </Link>
                     <p className="text-sm text-ink/60">
                       {new Date(e.starts_at).toLocaleString()} · {e.location}
                       {e.capacity ? ` · capacity ${e.capacity}` : ""}
