@@ -7,6 +7,7 @@ import NewEventButton from "@/components/NewEventButton";
 import PendingRequests from "@/components/PendingRequests";
 import MembersList from "@/components/MembersList";
 import ContactOrganizers from "@/components/ContactOrganizers";
+import { formatDateTime } from "@/lib/formatDate";
 
 export const revalidate = 0;
 
@@ -95,7 +96,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                       {e.title}
                     </Link>
                     <p className="text-sm text-ink/60">
-                      {new Date(e.starts_at).toLocaleString()} · {e.location}
+                      {formatDateTime(e.starts_at)} · {e.location}
                       {e.capacity ? ` · capacity ${e.capacity}` : ""}
                     </p>
                   </div>

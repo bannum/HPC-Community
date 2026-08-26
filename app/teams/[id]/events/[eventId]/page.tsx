@@ -4,6 +4,7 @@ import RsvpButtons from "@/components/RsvpButtons";
 import RsvpSummary from "@/components/RsvpSummary";
 import ShareEventButton from "@/components/ShareEventButton";
 import EventOwnerActions from "@/components/EventOwnerActions";
+import { formatDateTime } from "@/lib/formatDate";
 
 export const revalidate = 0;
 
@@ -36,7 +37,7 @@ export default async function EventDetailPage({
   };
 
   const teamName = (event.teams as unknown as { name: string } | null)?.name ?? "";
-  const when = new Date(event.starts_at).toLocaleString();
+  const when = formatDateTime(event.starts_at);
 
   return (
     <div className="max-w-lg space-y-4">

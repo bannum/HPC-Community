@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import RequireAuth from "@/components/RequireAuth";
+import { fromISTInputValue, toISTInputValue } from "@/lib/formatDate";
 
 export default function EditRequirementPage({ params }: { params: { id: string } }) {
   return (
@@ -55,7 +56,7 @@ function EditRequirementForm({ requirementId }: { requirementId: string }) {
       setArea(requirement.area ?? "");
       setGroundName(requirement.ground_name ?? "");
       setDetails(requirement.details);
-      setNeededOn(requirement.needed_on ? requirement.needed_on.slice(0, 16) : "");
+      setNeededOn(requirement.needed_on ? toISTInputValue(requirement.needed_on) : "");
       setContactPhone(requirement.contact_phone ?? "");
       setLoading(false);
     }
@@ -88,7 +89,7 @@ function EditRequirementForm({ requirementId }: { requirementId: string }) {
         area: area || null,
         ground_name: groundName || null,
         details,
-        needed_on: neededOn ? new Date(neededOn).toISOString() : null,
+        needed_on: neededOn ? fromISTInputValue(neededOn) : null,
         contact_phone: contactPhone || null,
       })
       .eq("id", requirementId);

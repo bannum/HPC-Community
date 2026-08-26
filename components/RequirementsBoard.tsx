@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { formatDateTime } from "@/lib/formatDate";
 
 type Requirement = {
   id: string;
@@ -155,7 +156,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
                   {r.ground_name ? `${r.ground_name}, ` : ""}
                   {r.area ? `${r.area}, ` : ""}
                   {r.city}
-                  {r.needed_on ? ` · ${new Date(r.needed_on).toLocaleString()}` : ""}
+                  {r.needed_on ? ` · ${formatDateTime(r.needed_on)}` : ""}
                 </p>
               </Link>
             </li>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import RequireAuth from "@/components/RequireAuth";
+import { fromISTInputValue, toISTInputValue } from "@/lib/formatDate";
 
 export default function EditEventPage({
   params,
@@ -68,7 +69,7 @@ function EditEventForm({ teamId, eventId }: { teamId: string; eventId: string })
 
       setTitle(event.title);
       setEventType(event.event_type);
-      setStartsAt(event.starts_at.slice(0, 16));
+      setStartsAt(toISTInputValue(event.starts_at));
       setLocation(event.location);
       setCapacity(event.capacity ? String(event.capacity) : "");
       setDetails(event.details ?? "");
@@ -87,7 +88,7 @@ function EditEventForm({ teamId, eventId }: { teamId: string; eventId: string })
       .update({
         title,
         event_type: eventType,
-        starts_at: new Date(startsAt).toISOString(),
+        starts_at: fromISTInputValue(startsAt),
         location,
         capacity: capacity ? parseInt(capacity, 10) : null,
         details: details || null,

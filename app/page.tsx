@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { formatDateTime } from "@/lib/formatDate";
 
 export const revalidate = 0;
 
@@ -69,7 +70,7 @@ export default async function HomePage() {
                     {r.ground_name ? `${r.ground_name}, ` : ""}
                     {r.area ? `${r.area}, ` : ""}
                     {r.city}
-                    {r.needed_on ? ` · ${new Date(r.needed_on).toLocaleString()}` : ""}
+                    {r.needed_on ? ` · ${formatDateTime(r.needed_on)}` : ""}
                   </p>
                 </Link>
               </li>
@@ -102,7 +103,7 @@ export default async function HomePage() {
                   <p className="text-sm text-ink/60 mt-1">
                     {(e.teams as unknown as { name: string } | null)?.name}
                     {" · "}
-                    {new Date(e.starts_at).toLocaleString()} · {e.location}
+                    {formatDateTime(e.starts_at)} · {e.location}
                   </p>
                 </Link>
               </li>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import RequirementInteraction from "@/components/RequirementInteraction";
+import { formatDateTime } from "@/lib/formatDate";
 
 export const revalidate = 0;
 
@@ -55,7 +56,7 @@ export default async function RequirementDetailPage({
           {requirement.area ? `${requirement.area}, ` : ""}
           {requirement.city}
           {requirement.needed_on
-            ? ` · needed ${new Date(requirement.needed_on).toLocaleString()}`
+            ? ` · needed ${formatDateTime(requirement.needed_on)}`
             : ""}
         </p>
 

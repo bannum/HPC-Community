@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import RequireAuth from "@/components/RequireAuth";
+import { fromISTInputValue } from "@/lib/formatDate";
 
 export default function NewRequirementPage() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function NewRequirementPage() {
       area: area || null,
       ground_name: groundName || null,
       details,
-      needed_on: neededOn ? new Date(neededOn).toISOString() : null,
+      needed_on: neededOn ? fromISTInputValue(neededOn) : null,
       contact_phone: contactPhone || null,
     });
 

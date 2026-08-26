@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import RequireAuth from "@/components/RequireAuth";
+import { fromISTInputValue } from "@/lib/formatDate";
 
 export default function NewEventPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function NewEventPage({ params }: { params: { id: string } }) {
         team_id: params.id,
         title,
         event_type: eventType,
-        starts_at: new Date(startsAt).toISOString(),
+        starts_at: fromISTInputValue(startsAt),
         location,
         capacity: capacity ? parseInt(capacity, 10) : null,
         details: details || null,
