@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import RsvpButtons from "@/components/RsvpButtons";
+import RsvpSummary from "@/components/RsvpSummary";
 import JoinButton from "@/components/JoinButton";
 import NewEventButton from "@/components/NewEventButton";
 import PendingRequests from "@/components/PendingRequests";
@@ -98,16 +99,13 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                       {e.capacity ? ` · capacity ${e.capacity}` : ""}
                     </p>
                   </div>
-                  {/* Scoreboard-style RSVP tally — the screen meant to replace scrolling a WhatsApp thread */}
-                  <div className="flex gap-4 scoreboard-digit text-xl">
-                    <span title="Going">{c.going}✓</span>
-                    <span title="Maybe" className="text-scoreboard">
-                      {c.maybe}?
-                    </span>
-                    <span title="Not going" className="text-ink/40">
-                      {c.not_going}✕
-                    </span>
-                  </div>
+                  {/* Scoreboard-style RSVP tally — click a count to see who — the screen meant to replace scrolling a WhatsApp thread */}
+                  <RsvpSummary
+                    eventId={e.id}
+                    going={c.going}
+                    maybe={c.maybe}
+                    notGoing={c.not_going}
+                  />
                 </div>
                 <div className="mt-3">
                   <RsvpButtons eventId={e.id} teamId={team.id} initialStatus={null} />

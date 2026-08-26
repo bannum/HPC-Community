@@ -146,6 +146,7 @@ create table if not exists events (
   starts_at timestamptz not null,
   location text not null,
   capacity int,
+  details text,
   created_by uuid not null references profiles(id),
   created_at timestamptz not null default now()
 );
@@ -163,6 +164,13 @@ create policy "Members can create events"
   on events for insert with check (
     team_id in (select id from teams where owner_id = auth.uid())
     or public.is_accepted_member(team_id, auth.uid())
+  );
+
+create policy "Creator or team owner/admin can update events"
+  on events for update using (
+    auth.uid() = created_by
+    or team_id in (select id from teams where owner_id = auth.uid())
+    or public.has_team_role(team_id, auth.uid(), array['owner','admin']::membership_role[])
   );
 
 -- ============ RSVPs ============
@@ -322,3 +330,11 @@ create policy "Team owners/admins can view member and requester profiles"
 
 create policy "Requirement poster and responder can view each other"
   on profiles for select using (public.requirement_contact_visible(id, auth.uid()));
+
+-- A name-only (no phone/city) view of profiles, publicly readable. Used to
+-- show who RSVP'd to an event without exposing contact info to strangers —
+-- phone stays protected by the RLS policies above on the base table.
+create or replace view public.public_profiles as
+  select id, full_name from profiles;
+
+grant select on public.public_profiles to anon, authenticated;

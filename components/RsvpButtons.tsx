@@ -39,6 +39,11 @@ export default function RsvpButtons({
         { onConflict: "event_id,user_id" }
       );
     await ensureAcceptedMembership(teamId, user.id);
+    fetch("/api/notify/rsvp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId, userId: user.id, status: newStatus }),
+    }).catch(() => {});
     setStatus(newStatus);
     setSaving(false);
   }
