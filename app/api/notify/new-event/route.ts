@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/siteUrl";
 
 export async function POST(req: Request) {
   const { teamId, eventId } = await req.json();
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     await sendEmail({
       to: email,
       subject: `New event for ${team.name}: ${event.title}`,
-      html: `<p><strong>${event.title}</strong> was just posted for <strong>${team.name}</strong>.</p><p>${when} · ${event.location}</p><p>Open the team page to RSVP.</p>`,
+      html: `<p><strong>${event.title}</strong> was just posted for <strong>${team.name}</strong>.</p><p>${when} · ${event.location}</p><p><a href="${SITE_URL}/teams/${teamId}/events/${eventId}">Open the event to RSVP</a></p>`,
     });
   }
 

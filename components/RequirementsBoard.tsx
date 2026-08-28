@@ -30,6 +30,12 @@ function typeLabel(r: Pick<Requirement, "requirement_type" | "custom_type_label"
   return TYPE_LABELS[r.requirement_type] ?? r.requirement_type.replace("_", " ");
 }
 
+// Computed live from needed_on rather than a stored status, so it's always
+// accurate with no background job needed to keep it in sync.
+function isExpired(r: Pick<Requirement, "status" | "needed_on">) {
+  return r.status === "open" && Boolean(r.needed_on) && new Date(r.needed_on as string) < new Date();
+}
+
 export default function RequirementsBoard({ requirements }: { requirements: Requirement[] }) {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
@@ -52,7 +58,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
     const q = search.trim().toLowerCase();
     let rows = requirements.filter((r) => {
       if (mineOnly && r.posted_by !== userId) return false;
-      if (!showFulfilled && r.status === "fulfilled") return false;
+      if (!showFulfilled && (r.status === "fulfilled" || isExpired(r))) return false;
       if (type !== "all" && r.requirement_type !== type) return false;
       if (city !== "all" && r.city !== city) return false;
       if (q) {
@@ -121,7 +127,7 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
             checked={showFulfilled}
             onChange={(e) => setShowFulfilled(e.target.checked)}
           />
-          Show fulfilled
+          Show fulfilled/expired
         </label>
         {userId && (
           <label className="flex items-center gap-2 text-sm whitespace-nowrap">
@@ -141,7 +147,9 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
             <li
               key={r.id}
               className={`bg-white border rounded ${
-                r.status === "fulfilled" ? "border-ink/10 opacity-60" : "border-pitch/20"
+                r.status === "fulfilled" || isExpired(r)
+                  ? "border-ink/10 opacity-60"
+                  : "border-pitch/20"
               }`}
             >
               <Link href={`/requirements/${r.id}`} className="block p-4 hover:border-scoreboard">
@@ -150,6 +158,9 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
                 </span>
                 {r.status === "fulfilled" && (
                   <span className="text-xs ml-2 text-ink/50">· fulfilled</span>
+                )}
+                {r.status !== "fulfilled" && isExpired(r) && (
+                  <span className="text-xs ml-2 text-ink/50">· expired</span>
                 )}
                 <p className="mt-1">{r.details}</p>
                 <p className="text-sm text-ink/60 mt-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { ensureProfile } from "@/lib/supabase/ensureProfile";
@@ -12,15 +12,39 @@ export default function SignInPage() {
   const [step, setStep] = useState<"email" | "code">("email");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => setResendCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown]);
+
+  async function sendCode() {
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) {
+      setError(error.message);
+      return false;
+    }
+    setResendCooldown(30);
+    return true;
+  }
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const ok = await sendCode();
     setSubmitting(false);
-    if (error) setError(error.message);
-    else setStep("code");
+    if (ok) setStep("code");
+  }
+
+  async function handleResend() {
+    setError(null);
+    setResent(false);
+    const ok = await sendCode();
+    if (ok) setResent(true);
   }
 
   async function handleVerifyCode(e: React.FormEvent) {
@@ -110,6 +134,7 @@ export default function SignInPage() {
             />
           </div>
           {error && <p className="text-red-700 text-sm">{error}</p>}
+          {resent && <p className="text-pitch text-sm">New code sent.</p>}
           <button
             type="submit"
             disabled={submitting}
@@ -117,17 +142,28 @@ export default function SignInPage() {
           >
             {submitting ? "Verifying…" : "Verify & sign in"}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStep("email");
-              setCode("");
-              setError(null);
-            }}
-            className="block text-sm underline text-ink/60"
-          >
-            Use a different email
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendCooldown > 0}
+              className="text-sm underline text-ink/60 disabled:opacity-50 disabled:no-underline"
+            >
+              {resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : "Resend code"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStep("email");
+                setCode("");
+                setError(null);
+                setResent(false);
+              }}
+              className="text-sm underline text-ink/60"
+            >
+              Use a different email
+            </button>
+          </div>
         </form>
       )}
 

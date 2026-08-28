@@ -16,6 +16,7 @@ export default async function HomePage() {
     .from("requirements")
     .select("id, requirement_type, custom_type_label, city, area, ground_name, details, needed_on")
     .eq("status", "open")
+    .or(`needed_on.is.null,needed_on.gte.${new Date().toISOString()}`)
     .order("created_at", { ascending: false })
     .limit(6);
 

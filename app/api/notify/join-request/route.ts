@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/siteUrl";
 
 export async function POST(req: Request) {
   const { teamId, requesterId } = await req.json();
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
     await sendEmail({
       to: email,
       subject: `New join request for ${team.name}`,
-      html: `<p><strong>${requester?.full_name ?? "Someone"}</strong> has requested to join <strong>${team.name}</strong>.</p><p>Open the team page to accept or reject the request.</p>`,
+      html: `<p><strong>${requester?.full_name ?? "Someone"}</strong> has requested to join <strong>${team.name}</strong>.</p><p><a href="${SITE_URL}/teams/${teamId}">Open the team page to accept or reject the request</a></p>`,
     });
   }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/siteUrl";
 
 export async function POST(req: Request) {
   const { requirementId, responderId } = await req.json();
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   await sendEmail({
     to: email,
     subject: `${responder?.full_name ?? "Someone"} is interested in your post`,
-    html: `<p><strong>${responder?.full_name ?? "Someone"}</strong> responded "I'm interested" to your post: "${requirement.details}".</p><p>Open the post to see their contact details.</p>`,
+    html: `<p><strong>${responder?.full_name ?? "Someone"}</strong> responded "I'm interested" to your post: "${requirement.details}".</p><p><a href="${SITE_URL}/requirements/${requirementId}">Open the post to see their contact details</a></p>`,
   });
 
   return NextResponse.json({ ok: true });

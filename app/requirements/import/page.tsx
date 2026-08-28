@@ -83,7 +83,7 @@ function ImportForm() {
     }
 
     const rows = candidates.filter((c) => selected.has(c.key));
-    let count = 0;
+    const postedKeys = new Set<string>();
     for (const row of rows) {
       if (row.groundName.trim()) {
         await supabase
@@ -104,11 +104,19 @@ function ImportForm() {
         needed_on: row.neededOn ? new Date(row.neededOn).toISOString() : null,
         contact_phone: row.contactPhone || null,
       });
-      if (!insertError) count++;
+      if (!insertError) postedKeys.add(row.key);
     }
 
+    // Remove posted rows from the list so they can't be double-posted, and
+    // so the shrinking list itself is visible feedback that something happened.
+    setCandidates((prev) => (prev ?? []).filter((c) => !postedKeys.has(c.key)));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      postedKeys.forEach((k) => next.delete(k));
+      return next;
+    });
     setPosting(false);
-    setPosted(count);
+    setPosted(postedKeys.size);
   }
 
   return (
@@ -256,13 +264,23 @@ function ImportForm() {
           </div>
 
           {error && <p className="text-red-700 text-sm">{error}</p>}
-          <button
-            onClick={postSelected}
-            disabled={posting || selected.size === 0}
-            className="bg-scoreboard text-ink font-semibold px-5 py-2 rounded disabled:opacity-50"
-          >
-            {posting ? "Posting…" : `Post ${selected.size} selected`}
-          </button>
+          {posted !== null && (
+            <p className="text-pitch font-medium text-sm">
+              Posted {posted} requirement{posted === 1 ? "" : "s"} to the board.{" "}
+              <Link href="/requirements" className="underline">
+                View board
+              </Link>
+            </p>
+          )}
+          {candidates.length > 0 && (
+            <button
+              onClick={postSelected}
+              disabled={posting || selected.size === 0}
+              className="bg-scoreboard text-ink font-semibold px-5 py-2 rounded disabled:opacity-50"
+            >
+              {posting ? "Posting…" : `Post ${selected.size} selected`}
+            </button>
+          )}
         </div>
       )}
     </div>

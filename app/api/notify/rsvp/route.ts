@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/siteUrl";
 
 export async function POST(req: Request) {
   const { eventId, userId, status } = await req.json();
 
   const { data: event } = await supabaseAdmin
     .from("events")
-    .select("title, created_by")
+    .select("title, created_by, team_id")
     .eq("id", eventId)
     .single();
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
   await sendEmail({
     to: email,
     subject: `${responder?.full_name ?? "Someone"} RSVP'd to ${event.title}`,
-    html: `<p><strong>${responder?.full_name ?? "Someone"}</strong> marked themselves as <strong>${statusLabel}</strong> for <strong>${event.title}</strong>.</p>`,
+    html: `<p><strong>${responder?.full_name ?? "Someone"}</strong> marked themselves as <strong>${statusLabel}</strong> for <strong>${event.title}</strong>.</p><p><a href="${SITE_URL}/teams/${event.team_id}/events/${eventId}">Open the event</a></p>`,
   });
 
   return NextResponse.json({ ok: true });

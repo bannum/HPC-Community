@@ -35,6 +35,11 @@ export default async function RequirementDetailPage({
       : TYPE_LABELS[requirement.requirement_type] ??
         requirement.requirement_type.replace("_", " ");
 
+  const isExpired =
+    requirement.status === "open" &&
+    Boolean(requirement.needed_on) &&
+    new Date(requirement.needed_on as string) < new Date();
+
   return (
     <div className="max-w-lg space-y-4">
       <Link href="/requirements" className="text-sm underline">
@@ -47,6 +52,9 @@ export default async function RequirementDetailPage({
         </span>
         {requirement.status === "fulfilled" && (
           <span className="text-xs ml-2 text-ink/50">· fulfilled</span>
+        )}
+        {requirement.status !== "fulfilled" && isExpired && (
+          <span className="text-xs ml-2 text-ink/50">· expired</span>
         )}
 
         <p className="mt-3 text-lg">{requirement.details}</p>
