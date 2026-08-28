@@ -1,18 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import RequireAuth from "@/components/RequireAuth";
+import { isAdminEmail } from "@/lib/adminEmails";
 import { parseWhatsAppExport, buildCandidates, type Candidate } from "@/lib/whatsappImport";
 
 export default function ImportWhatsAppPage() {
   return (
     <RequireAuth>
-      <ImportForm />
+      <AdminGate />
     </RequireAuth>
   );
+}
+
+function AdminGate() {
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setAllowed(isAdminEmail(data.user?.email));
+    });
+  }, []);
+
+  if (allowed === null) return null;
+  if (!allowed) return <p className="text-ink/60">This tool isn't available on your account.</p>;
+  return <ImportForm />;
 }
 
 function ImportForm() {

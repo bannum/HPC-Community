@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import RequirementsBoard from "@/components/RequirementsBoard";
+import ImportWhatsAppLink from "@/components/ImportWhatsAppLink";
 
 export const revalidate = 0;
 
@@ -17,12 +18,7 @@ export default async function RequirementsPage() {
       <div className="flex justify-between items-center flex-wrap gap-3">
         <h1 className="font-display text-3xl">The board</h1>
         <div className="flex gap-2">
-          <Link
-            href="/requirements/import"
-            className="border border-pitch/30 text-ink font-semibold px-4 py-2 rounded text-sm"
-          >
-            Import from WhatsApp
-          </Link>
+          <ImportWhatsAppLink />
           <Link
             href="/requirements/new"
             className="bg-scoreboard text-ink font-semibold px-4 py-2 rounded text-sm"
