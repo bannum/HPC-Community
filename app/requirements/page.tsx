@@ -14,14 +14,22 @@ export default async function RequirementsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <h1 className="font-display text-3xl">The board</h1>
-        <Link
-          href="/requirements/new"
-          className="bg-scoreboard text-ink font-semibold px-4 py-2 rounded text-sm"
-        >
-          Post a requirement
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/requirements/import"
+            className="border border-pitch/30 text-ink font-semibold px-4 py-2 rounded text-sm"
+          >
+            Import from WhatsApp
+          </Link>
+          <Link
+            href="/requirements/new"
+            className="bg-scoreboard text-ink font-semibold px-4 py-2 rounded text-sm"
+          >
+            Post a requirement
+          </Link>
+        </div>
       </div>
 
       {requirements && requirements.length > 0 ? (
