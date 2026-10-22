@@ -8,7 +8,18 @@ export async function ensureProfile(user: { id: string }) {
     .maybeSingle();
 
   if (!existing) {
-    await supabase.from("profiles").insert({ id: user.id });
+    const { error } = await supabase.from("profiles").insert({ id: user.id });
+    if (!error) {
+      // First-ever sign-in: let the owner know a real user arrived.
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token) {
+        fetch("/api/notify/new-user", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
+    }
   }
 }
 

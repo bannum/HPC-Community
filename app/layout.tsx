@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Analytics } from "@vercel/analytics/react";
 import AuthNav from "@/components/AuthNav";
 import "./globals.css";
 
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Support / Feedback
           </Link>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
