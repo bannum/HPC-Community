@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import RequireAuth from "@/components/RequireAuth";
 import { isAdminEmail } from "@/lib/adminEmails";
-import { parseWhatsAppExport, buildCandidates, type Candidate } from "@/lib/whatsappImport";
+import { fromISTInputValue } from "@/lib/formatDate";
+import {
+  parseWhatsAppExport,
+  buildCandidates,
+  normalizeForMatch,
+  type Candidate,
+} from "@/lib/whatsappImport";
 
 export default function ImportWhatsAppPage() {
   return (
@@ -39,6 +45,8 @@ function ImportForm() {
   const [posting, setPosting] = useState(false);
   const [posted, setPosted] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [skippedExisting, setSkippedExisting] = useState(0);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -48,20 +56,45 @@ function ImportForm() {
     reader.readAsText(file);
   }
 
-  function analyze() {
+  async function analyze() {
+    setAnalyzing(true);
     const messages = parseWhatsAppExport(raw);
     const built = buildCandidates(messages, city);
-    setCandidates(built);
+
+    // Drop anything that's already on the board (same text, same date), so
+    // re-importing an overlapping export -- or the same ad from two groups --
+    // doesn't create duplicates.
+    const { data: existing } = await supabase
+      .from("requirements")
+      .select("details, needed_on")
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    const onBoard = new Set(
+      (existing ?? []).map(
+        (e) =>
+          `${normalizeForMatch(e.details)}|${e.needed_on ? new Date(e.needed_on).toISOString().slice(0, 16) : ""}`
+      )
+    );
+    const fresh = built.filter(
+      (c) =>
+        !onBoard.has(
+          `${normalizeForMatch(c.details)}|${c.neededOn ? fromISTInputValue(c.neededOn).slice(0, 16) : ""}`
+        )
+    );
+    setSkippedExisting(built.length - fresh.length);
+
+    setCandidates(fresh);
     // Undated posts never expire on the board, so they'd linger forever --
     // leave them unticked and let the curator opt in deliberately.
     setSelected(
       new Set(
-        built
+        fresh
           .filter((c) => c.isFuture && c.neededOn !== "" && c.requirementType !== "other")
           .map((c) => c.key)
       )
     );
     setPosted(null);
+    setAnalyzing(false);
   }
 
   function updateCandidate(key: string, patch: Partial<Candidate>) {
@@ -109,7 +142,7 @@ function ImportForm() {
         area: row.area || null,
         ground_name: row.groundName || null,
         details: `${row.details} (via WhatsApp)`,
-        needed_on: row.neededOn ? new Date(row.neededOn).toISOString() : null,
+        needed_on: row.neededOn ? fromISTInputValue(row.neededOn) : null,
         contact_phone: row.contactPhone || null,
       });
       if (!insertError) postedKeys.add(row.key);
@@ -161,19 +194,26 @@ function ImportForm() {
         </div>
         <button
           onClick={analyze}
-          disabled={!raw.trim()}
+          disabled={!raw.trim() || analyzing}
           className="bg-scoreboard text-ink font-semibold px-5 py-2 rounded disabled:opacity-50"
         >
-          Analyze
+          {analyzing ? "Analyzing…" : "Analyze"}
         </button>
       </div>
 
       {candidates && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl">
-              {candidates.length} candidates found — {selected.size} selected
-            </h2>
+            <div>
+              <h2 className="font-display text-xl">
+                {candidates.length} new candidates — {selected.size} selected
+              </h2>
+              {skippedExisting > 0 && (
+                <p className="text-sm text-ink/60">
+                  {skippedExisting} already on the board, skipped.
+                </p>
+              )}
+            </div>
             {posted !== null && (
               <p className="text-pitch font-medium text-sm">
                 Posted {posted} requirement{posted === 1 ? "" : "s"} to the board.{" "}

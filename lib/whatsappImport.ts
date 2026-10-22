@@ -58,16 +58,74 @@ function extractPhone(text: string, sender: string): string {
   return "";
 }
 
+// Words that are never part of a ground's name. Walking backwards from
+// "Ground/Arena/Stadium", the first one of these ends the name -- this is
+// what stops "Leather ball Ground", "match Ground" or "FOR BOOKINGS ..."
+// from being read as ground names.
+const NAME_STOPWORDS = new Set(
+  (
+    "a an the at in on for from to and or with of near my our your " +
+    "looking need needed require required requires urgently urgent available availability avail " +
+    "opponent opponents opposition match matches overs over ov ball balls leather tennis white red " +
+    "sharing basis only booked booking bookings book slot slots today tomorrow tonight date day time " +
+    "venue ground grounds arena stadium contact dm call ping new free team teams " +
+    "am pm sat sun mon tue wed thu fri saturday sunday monday tuesday wednesday thursday friday " +
+    "jan feb mar apr may jun jul aug sep sept oct nov dec january february march april june july " +
+    "august september october november december " +
+    "hi hello captains captain guys all everyone please pls fee fees price offer live streaming " +
+    "complimentary umpires umpire this next coming weekend weekday weekdays night morning evening afternoon"
+  ).split(" ")
+);
+
+const LABEL_JUNK = /^(not booked|booked|searching|tbd|n\/?a|available|looking|yes|no)\b|opponent|looking for/i;
+
 function extractGround(text: string): string {
-  const m = text.match(
-    /([A-Z][A-Za-z0-9\s]{3,30}(?:Cricket Ground|CRICKET GROUND|Cricket Arena|CRICKET ARENA|Ground|GROUND|Arena|ARENA))/
+  // 1. An explicit label: "Ground : JJ Cricket Arena 1", "Venue: Toss Cricket Ground".
+  // The separator must be a colon, or a spaced dash -- a bare "Ground-1" is a name, not a label.
+  const label = text.match(
+    /\b(?:ground|venue|stadium|arena)\s*(?::|\s[-–]\s)\s*[*_]*\s*([^\n,|()*]{3,45})/i
   );
-  if (!m) return "";
-  // The match can swallow words just before the name ("07.00 AM SKR Valley
-  // Cricket Ground", "Looking for Ground") -- trim a leading AM/PM and drop
-  // matches that are really a sentence fragment.
-  const name = m[1].trim().replace(/^(AM|PM)\s+/i, "");
-  return /^(looking|need|hi|hello)\b/i.test(name) ? "" : name;
+  if (label) {
+    const v = label[1]
+      .replace(/[^\x20-\x7E]/g, "")
+      .replace(/\s+\d{1,2}[:.]\d{2}.*$/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (v && /[A-Za-z]{2}/.test(v) && !LABEL_JUNK.test(v)) return v;
+  }
+
+  // 2. Otherwise, the name-like words directly before "Ground/Arena/Stadium".
+  const keyword = /\b(?:cricket\s+)?(?:grounds?|arena|stadium)\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = keyword.exec(text))) {
+    const lineStart = text.lastIndexOf("\n", m.index) + 1;
+    const tokens = text
+      .slice(Math.max(lineStart, m.index - 60), m.index)
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const picked: string[] = [];
+    for (let i = tokens.length - 1; i >= 0 && picked.length < 4; i--) {
+      if (/[:,|\-–]$/.test(tokens[i])) break; // a separator ends the name
+      const word = tokens[i].replace(/^[*_~(\[]+|[*_~)\]]+$/g, "");
+      if (!word || NAME_STOPWORDS.has(word.toLowerCase())) break;
+      if (!/^[A-Za-z0-9&']+$/.test(word)) break;
+      // Short codes like "S2" are fine; long mixed letter/digit tokens are noise.
+      if (/\d/.test(word) && !/^[A-Za-z]{1,4}\d{0,2}$/.test(word) && !/^\d{1,2}$/.test(word)) break;
+      picked.unshift(word);
+    }
+    if (picked.length > 0) {
+      const phrase = m[0].replace(/\s+/g, " ").replace(/grounds\b/i, (s) => s.slice(0, -1));
+      return `${picked.join(" ")} ${phrase}`;
+    }
+  }
+  return "";
+}
+
+// Loose fingerprint for "is this the same post?": ignores case, punctuation,
+// emoji, and the "(via WhatsApp)" tag added on import.
+export function normalizeForMatch(text: string) {
+  return text.toLowerCase().replace(/\(via whatsapp\)/g, "").replace(/[^a-z0-9]/g, "").slice(0, 60);
 }
 
 function classify(text: string): Candidate["requirementType"] {
