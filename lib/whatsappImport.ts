@@ -62,7 +62,12 @@ function extractGround(text: string): string {
   const m = text.match(
     /([A-Z][A-Za-z0-9\s]{3,30}(?:Cricket Ground|CRICKET GROUND|Cricket Arena|CRICKET ARENA|Ground|GROUND|Arena|ARENA))/
   );
-  return m ? m[1].trim() : "";
+  if (!m) return "";
+  // The match can swallow words just before the name ("07.00 AM SKR Valley
+  // Cricket Ground", "Looking for Ground") -- trim a leading AM/PM and drop
+  // matches that are really a sentence fragment.
+  const name = m[1].trim().replace(/^(AM|PM)\s+/i, "");
+  return /^(looking|need|hi|hello)\b/i.test(name) ? "" : name;
 }
 
 function classify(text: string): Candidate["requirementType"] {
@@ -87,7 +92,8 @@ const MONTHS: Record<string, number> = {
 };
 const WEEKDAYS: Record<string, number> = {
   sunday: 0, sun: 0, monday: 1, mon: 1, tuesday: 2, tue: 2, wednesday: 3, wed: 3,
-  thursday: 4, thu: 4, friday: 5, fri: 5, saturday: 6, sat: 6,
+  thursday: 4, thu: 4, thur: 4, thurs: 4, friday: 5, fri: 5, saturday: 6, sat: 6,
+  tues: 2,
 };
 
 function applyTime(date: Date, text: string): Date {
@@ -130,7 +136,9 @@ function extractNeededOn(text: string, messageTime: Date): Date | null {
     return applyTime(d, text);
   }
 
-  const wd = text.match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
+  const wd = text.match(
+    /\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tues|tue|wed|thurs|thur|thu|fri|sat)\b/i
+  );
   if (wd) {
     const target = WEEKDAYS[wd[1].toLowerCase()];
     const d = new Date(messageTime);

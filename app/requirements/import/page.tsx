@@ -52,7 +52,15 @@ function ImportForm() {
     const messages = parseWhatsAppExport(raw);
     const built = buildCandidates(messages, city);
     setCandidates(built);
-    setSelected(new Set(built.filter((c) => c.isFuture && c.requirementType !== "other").map((c) => c.key)));
+    // Undated posts never expire on the board, so they'd linger forever --
+    // leave them unticked and let the curator opt in deliberately.
+    setSelected(
+      new Set(
+        built
+          .filter((c) => c.isFuture && c.neededOn !== "" && c.requirementType !== "other")
+          .map((c) => c.key)
+      )
+    );
     setPosted(null);
   }
 
@@ -245,7 +253,8 @@ function ImportForm() {
                     <div>
                       <label className="block text-xs font-medium mb-1">
                         Source ({c.sourceWhen}
-                        {!c.isFuture ? " — looks past-dated" : ""})
+                        {!c.isFuture ? " — looks past-dated" : ""}
+                        {c.neededOn === "" ? " — no date found, won't expire" : ""})
                       </label>
                     </div>
                     <div className="sm:col-span-2">
