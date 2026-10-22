@@ -9,7 +9,7 @@ export default async function RequirementsPage() {
   const { data: requirements } = await supabase
     .from("requirements")
     .select(
-      "id, posted_by, requirement_type, custom_type_label, city, area, ground_name, details, needed_on, status"
+      "id, posted_by, requirement_type, custom_type_label, city, area, ground_name, details, needed_on, status, contact_phone"
     )
     .order("created_at", { ascending: false });
 

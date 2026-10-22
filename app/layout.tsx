@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import AuthNav from "@/components/AuthNav";
+import { SITE_URL } from "@/lib/siteUrl";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Cricket Connect",
   description: "Find teams, grounds, and matches — without losing it in a WhatsApp group.",
 };

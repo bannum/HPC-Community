@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { formatDateTime } from "@/lib/formatDate";
+import { openWhatsAppShare } from "@/lib/shareRequirement";
 
 type Requirement = {
   id: string;
@@ -16,6 +17,7 @@ type Requirement = {
   details: string;
   needed_on: string | null;
   status: string;
+  contact_phone: string | null;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -170,6 +172,27 @@ export default function RequirementsBoard({ requirements }: { requirements: Requ
                   {r.needed_on ? ` · ${formatDateTime(r.needed_on)}` : ""}
                 </p>
               </Link>
+              {r.status !== "fulfilled" && !isExpired(r) && (
+                <div className="px-4 pb-3">
+                  <button
+                    onClick={() =>
+                      openWhatsAppShare({
+                        id: r.id,
+                        typeLabel: typeLabel(r),
+                        city: r.city,
+                        area: r.area,
+                        groundName: r.ground_name,
+                        neededOn: r.needed_on,
+                        details: r.details,
+                        contactPhone: r.contact_phone,
+                      })
+                    }
+                    className="text-xs underline text-ink/60"
+                  >
+                    Share on WhatsApp
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import RequirementInteraction from "@/components/RequirementInteraction";
+import ShareRequirementButton from "@/components/ShareRequirementButton";
 import { formatDateTime } from "@/lib/formatDate";
 
 export const revalidate = 0;
@@ -11,6 +13,30 @@ const TYPE_LABELS: Record<string, string> = {
   ground_available: "Ground available",
   other: "Other",
 };
+
+function labelFor(r: { requirement_type: string; custom_type_label: string | null }) {
+  return r.requirement_type === "other" && r.custom_type_label
+    ? r.custom_type_label
+    : TYPE_LABELS[r.requirement_type] ?? r.requirement_type.replace("_", " ");
+}
+
+// Gives the link a proper title/description when pasted into WhatsApp.
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const { data: r } = await supabase
+    .from("requirements")
+    .select("requirement_type, custom_type_label, city, details")
+    .eq("id", params.id)
+    .single();
+  if (!r) return {};
+
+  const title = `${labelFor(r)} — ${r.city} | Cricket Connect`;
+  const description = r.details.replace(/\s*\(via WhatsApp\)\s*$/i, "").slice(0, 200);
+  return { title, description, openGraph: { title, description, type: "website" } };
+}
 
 export default async function RequirementDetailPage({
   params,
@@ -29,11 +55,7 @@ export default async function RequirementDetailPage({
     return <p>Requirement not found.</p>;
   }
 
-  const typeLabel =
-    requirement.requirement_type === "other" && requirement.custom_type_label
-      ? requirement.custom_type_label
-      : TYPE_LABELS[requirement.requirement_type] ??
-        requirement.requirement_type.replace("_", " ");
+  const typeLabel = labelFor(requirement);
 
   const isExpired =
     requirement.status === "open" &&
@@ -67,6 +89,23 @@ export default async function RequirementDetailPage({
             ? ` · needed ${formatDateTime(requirement.needed_on)}`
             : ""}
         </p>
+
+        {requirement.status !== "fulfilled" && !isExpired && (
+          <div className="mt-4">
+            <ShareRequirementButton
+              requirement={{
+                id: requirement.id,
+                typeLabel,
+                city: requirement.city,
+                area: requirement.area,
+                groundName: requirement.ground_name,
+                neededOn: requirement.needed_on,
+                details: requirement.details,
+                contactPhone: requirement.contact_phone,
+              }}
+            />
+          </div>
+        )}
 
         <RequirementInteraction
           requirementId={requirement.id}
