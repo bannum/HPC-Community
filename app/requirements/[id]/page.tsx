@@ -33,8 +33,12 @@ export async function generateMetadata({
     .single();
   if (!r) return {};
 
-  const title = `${labelFor(r)} — ${r.city} | Cricket Connect`;
-  const description = r.details.replace(/\s*\(via WhatsApp\)\s*$/i, "").slice(0, 200);
+  const title = `${labelFor(r).trim()} — ${r.city.trim()} | Cricket Connect`;
+  const description = r.details
+    .replace(/\s*\(via WhatsApp\)\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
   return { title, description, openGraph: { title, description, type: "website" } };
 }
 

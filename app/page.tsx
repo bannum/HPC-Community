@@ -52,7 +52,12 @@ export default async function HomePage() {
       </section>
 
       <section>
-        <h2 className="font-display text-2xl mb-4">Open right now</h2>
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="font-display text-2xl">Open right now</h2>
+          <Link href="/requirements" className="text-sm font-medium underline">
+            View all on the board &rarr;
+          </Link>
+        </div>
         {openRequirements && openRequirements.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {openRequirements.map((r) => (
@@ -116,7 +121,12 @@ export default async function HomePage() {
       </section>
 
       <section>
-        <h2 className="font-display text-2xl mb-4">Teams</h2>
+        <div className="flex items-baseline justify-between mb-4">
+          <h2 className="font-display text-2xl">Teams</h2>
+          <Link href="/teams" className="text-sm font-medium underline">
+            View all teams &rarr;
+          </Link>
+        </div>
         {teams && teams.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {teams.map((t) => (
