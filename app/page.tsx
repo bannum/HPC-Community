@@ -52,12 +52,7 @@ export default async function HomePage() {
       </section>
 
       <section>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="font-display text-2xl">Open right now</h2>
-          <Link href="/requirements" className="text-sm font-medium underline">
-            View all on the board &rarr;
-          </Link>
-        </div>
+        <h2 className="font-display text-2xl mb-4">Open right now</h2>
         {openRequirements && openRequirements.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {openRequirements.map((r) => (
@@ -90,6 +85,14 @@ export default async function HomePage() {
             </Link>
           </p>
         )}
+        {openRequirements && openRequirements.length > 0 && (
+          <Link
+            href="/requirements"
+            className="mt-4 block rounded border border-pitch/30 px-4 py-3 text-center font-semibold sm:inline-block"
+          >
+            View all on the board &rarr;
+          </Link>
+        )}
       </section>
 
       <section>
@@ -121,12 +124,7 @@ export default async function HomePage() {
       </section>
 
       <section>
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="font-display text-2xl">Teams</h2>
-          <Link href="/teams" className="text-sm font-medium underline">
-            View all teams &rarr;
-          </Link>
-        </div>
+        <h2 className="font-display text-2xl mb-4">Teams</h2>
         {teams && teams.length > 0 ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             {teams.map((t) => (
@@ -152,6 +150,14 @@ export default async function HomePage() {
           </ul>
         ) : (
           <p className="text-ink/60">No public teams yet.</p>
+        )}
+        {teams && teams.length > 0 && (
+          <Link
+            href="/teams"
+            className="mt-4 block rounded border border-pitch/30 px-4 py-3 text-center font-semibold sm:inline-block"
+          >
+            View all teams &rarr;
+          </Link>
         )}
       </section>
     </div>
